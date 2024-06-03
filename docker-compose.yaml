@@ -1,0 +1,39 @@
+version: "3.8"
+
+services:
+  sedra_socket_server:
+    build: .
+    container_name: sedra_socket_server
+    restart: unless-stopped
+    environment:
+      SEDRAD_HOST_1: "127.0.0.1:22910"
+      SQL_URI: "postgresql+asyncpg://sedra:GhostDag223@localhost:5432/postgres"
+    ports:
+      - "8001:8000/tcp"
+
+  sedrad:
+    build: ./sedrad_s
+    container_name: sedrad
+    restart: unless-stopped
+    command: >
+      ./sedrad_2 --utxoindex
+      --appdir=/data/node3_1
+      --rpclisten=127.0.0.1:22910
+      --listen=127.0.0.1:22911
+      --rpcmaxclients=25000000
+    volumes:
+      - /home/ubuntu/web/explorer/socket/sedrad_s/node3_1:/data/node3_1
+
+  sedra_db:
+    container_name: sedra_db
+    image: postgres:14-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: sedra
+      POSTGRES_PASSWORD: GhostDag223
+      POSTGRES_DB: postgres
+    volumes:
+      - sedra_db:/var/lib/postgresql/data/
+
+volumes:
+  sedra_db:
